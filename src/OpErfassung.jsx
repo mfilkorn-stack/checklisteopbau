@@ -44,8 +44,9 @@ const doorQs = (pfx) => [
 
 const ROOM_SECTIONS = [
   {
-    id: "hoehen", title: "2 · Raumhöhen", types: ["op", "wasch", "awr", "steri", "lager", "flur", "sonst"],
+    id: "hoehen", title: "2 · Raumhöhen & Fläche", types: ["op", "wasch", "awr", "steri", "lager", "flur", "sonst"],
     qs: [
+      { id: "h_flaeche", t: "num", unit: "m²", label: "Raumfläche" },
       { id: "h_roh", t: "num", unit: "m", label: "Fertigfußboden zu Rohdecke", req: true },
       { id: "h_dec", t: "num", unit: "m", label: "Fertigfußboden zu abgehängter Decke" },
       { id: "h_bem", t: "area", label: "Bemerkungen (z. B. dwg vorhanden)" },
@@ -230,7 +231,7 @@ const bielefeld = () => {
   d.gates = { ...d.gates, portfolio: ["Schulter", "Knie", "Hüfte", "Fuß/Sprunggelenk", "Hand", "Wirbelsäule"], c_bogen: true, raumklassen: "3x Ib fertig, 1x Ausbau auf Ia vorbereiten", dwg: true };
   d.betten = { g1: null, g2: null, g3: null, m: "", trigger: "" };
   const op1 = emptyRoom("op", "OP 1");
-  op1.a = { w_typ: "3-teilig raumhoch (Raster max. 1.190 mm)", w_mat: "Edelstahl-pulverbeschichtet", w_pb: { ja: true, pb: PB[0] }, w_design: true, h_bem: "dwg vorhanden; Räume 30 m² plus", d_kass: "600x600 mm", l_gr: "600x600 mm", l_anz: "Standard", l_typ: "LED", l_amb: false, l_dali: true, fi_ja: false, fb_vor: true, fb_an: true, fb_bem: "laut Plan", e_integra: true, e_ifn: ["Raumlicht An/Aus", "Raumtemperatur", "Jalousien Türen", "Jalousien Fenster", "Alarm med. Gase", "Alarm Lüftung", "PACS/KIS-Anbindung", "Musik Player"], e_doku: "32 Zoll", e_mon: "55 Zoll", e_tast: true, e_sid: true, e_uhr: true, e_naht: true, e_abl1: { ja: true, n: "4" }, e_tav: "Nein", e_zul: { ja: true, n: "" }, e_bem: "Zentrale Lagerung außerhalb, aber nah // Rüstzone?", v_arm: "1 Arm", v_kreis: "2er Stromkreis", v_230: { ja: true, n: "" }, v_pot: { ja: true, n: "" }, v_daten: ["RJ45", "HDMI"], v_o2: { ja: true, n: "" }, v_n2o: { ja: true, n: "" }, v_agfs: { ja: true, n: "" }, v_a4: { ja: true, n: "" }, v_abl: { ja: true, n: "" }, v_schub: { ja: true, n: "" }, o_anz: "Standard", o_achse: "Duo", o_cfg: "2x Leuchten", o_bed: "1,3 Zoll Display", o_wand: "Nein", o_schatten: false, o_kam: "Nein", o_mon: true, o_bem: "Kamera nachrüstbar", o_netz: "24 V" };
+  op1.a = { w_typ: "3-teilig raumhoch (Raster max. 1.190 mm)", w_mat: "Edelstahl-pulverbeschichtet", w_pb: { ja: true, pb: PB[0] }, w_design: true, h_flaeche: "32", h_bem: "dwg vorhanden; Räume 30 m² plus", d_kass: "600x600 mm", l_gr: "600x600 mm", l_anz: "Standard", l_typ: "LED", l_amb: false, l_dali: true, fi_ja: false, fb_vor: true, fb_an: true, fb_bem: "laut Plan", e_integra: true, e_ifn: ["Raumlicht An/Aus", "Raumtemperatur", "Jalousien Türen", "Jalousien Fenster", "Alarm med. Gase", "Alarm Lüftung", "PACS/KIS-Anbindung", "Musik Player"], e_doku: "32 Zoll", e_mon: "55 Zoll", e_tast: true, e_sid: true, e_uhr: true, e_naht: true, e_abl1: { ja: true, n: "4" }, e_tav: "Nein", e_zul: { ja: true, n: "" }, e_bem: "Zentrale Lagerung außerhalb, aber nah // Rüstzone?", v_arm: "1 Arm", v_kreis: "2er Stromkreis", v_230: { ja: true, n: "" }, v_pot: { ja: true, n: "" }, v_daten: ["RJ45", "HDMI"], v_o2: { ja: true, n: "" }, v_n2o: { ja: true, n: "" }, v_agfs: { ja: true, n: "" }, v_a4: { ja: true, n: "" }, v_abl: { ja: true, n: "" }, v_schub: { ja: true, n: "" }, o_anz: "Standard", o_achse: "Duo", o_cfg: "2x Leuchten", o_bed: "1,3 Zoll Display", o_wand: "Nein", o_schatten: false, o_kam: "Nein", o_mon: true, o_bem: "Kamera nachrüstbar", o_netz: "24 V" };
   const t = emptyDoor("schiebe");
   t.a = { schiebe_fluegel: "Einflügelig", schiebe_auto: "Automatisch", schiebe_fenster: true, schiebe_fgr: "500x600 mm", schiebe_pb: { ja: true, pb: PB[0] }, schiebe_jal: true, schiebe_milch: false, schiebe_herm: false, schiebe_schalter: "Schalter in der Zarge (Standard)", schiebe_schleuse: false };
   const t2 = emptyDoor("dreh");
