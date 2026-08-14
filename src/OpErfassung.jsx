@@ -308,7 +308,7 @@ function computeMissing(d) {
   need(d.gates.portfolio.length === 0, "Gates: Eingriffsspektrum/Portfolio", "gates");
   need(d.gates.c_bogen === null, "Gates: C-Bogen ja/nein (steuert alle Strahlenschutzfragen)", "gates");
   need(!d.gates.raumklassen, "Gates: Raumklasse je Saal (Ia/Ib)", "gates");
-  need(!d.gates.p30, "Gates: § 30-GewO-Status", "gates");
+  need(d.betten.g1 !== false && !d.gates.p30, "Gates: § 30-GewO-Status", "gates");
   need(d.gates.dwg === null, "Gates: DWG-Pläne maßstabsgetreu vorhanden?", "gates");
   need(d.raeume.length === 0, "Räume: noch kein Raum angelegt", "raeume");
   d.raeume.forEach((r) => {
@@ -327,14 +327,18 @@ function computeMissing(d) {
   });
   need(!d.tische.anzahl, "OP-Tische: Anzahl", "tische");
   GEWERKE.forEach((g) => need(!d.schnitt.zust[g], "Schnittstellen: " + g + " – Zuständigkeit offen", "schnitt"));
-  need(d.schnitt.statik === null, "Bestand: Statik/Deckenlasten (DVE, OP-Leuchte) geprüft?", "schnitt");
-  need(d.schnitt.transport === null, "Bestand: Transportweg für Wandelemente geprüft?", "schnitt");
+  if (d.kopf.bauart !== "Neubau") {
+    need(d.schnitt.statik === null, "Bestand: Statik/Deckenlasten (DVE, OP-Leuchte) geprüft?", "schnitt");
+    need(d.schnitt.transport === null, "Bestand: Transportweg für Wandelemente geprüft?", "schnitt");
+  }
   need(d.montage.team === null, "Montage: Montageteam ja/nein", "montage");
   return miss;
 }
 
 function countRequired(d) {
-  let total = 15 + GEWERKE.length + 3;
+  const bestandRelevant = d.kopf.bauart !== "Neubau"; // nur bei Altbau/Renovierung gibt es einen zu prüfenden Bestand
+  const p30Relevant = d.betten.g1 !== false; // ohne Kurzlieger-Betrieb entfällt die GewO-Konzession
+  let total = 15 + GEWERKE.length + 3 - (bestandRelevant ? 0 : 2) - (p30Relevant ? 0 : 1);
   d.raeume.forEach((r) => {
     ROOM_SECTIONS.filter((s) => s.types.includes(r.typ)).forEach((s) => { total += s.qs.filter((q) => q.req && (!q.showIf || q.showIf(r.a))).length; });
     total += r.tueren.length;
@@ -411,6 +415,8 @@ export default function OpChecklist() {
   if (kurzliegerErgebnis === "nein") gateChips.push(["Kurzlieger: nein → Same-Day + Verlegungspfad", C.grey]);
   if (kurzliegerErgebnis === "ja") gateChips.push(["Kurzlieger: ja (m = " + (d.betten.m || "?") + ")", C.ok]);
   if (kurzliegerErgebnis === "vorruesten") gateChips.push(["Kurzlieger: vorrüsten (Realoption)", C.warn]);
+  if (d.betten.g1 === false) gateChips.push(["Kein Kurzlieger → § 30-GewO entfällt", C.grey]);
+  if (d.kopf.bauart === "Neubau") gateChips.push(["Neubau → Bestandsprüfung entfällt", C.grey]);
 
   const btnGhost = { border: "1px solid " + C.line, color: C.ink, background: "#fff" };
 
@@ -509,8 +515,8 @@ export default function OpChecklist() {
               <Field q={{ t: "text", label: "Zielfallzahl je Saal und Tag (F = n × …)" }} val={d.gates.faelleProSaal} set={(v) => up(["gates", "faelleProSaal"], v)} gates={d.gates} />
               <Field q={{ t: "bool", label: "C-Bogen im Einsatz (StrlSchG!) – steuert alle Pb-Fragen", req: true }} val={d.gates.c_bogen} set={(v) => up(["gates", "c_bogen"], v)} gates={d.gates} />
               <Field q={{ t: "text", label: "Raumklasse je Saal (Ib / Ib+Ia-ready / Ia)", req: true }} val={d.gates.raumklassen} set={(v) => up(["gates", "raumklassen"], v)} gates={d.gates} />
-              <Field q={{ t: "bool", label: "Endoprothetik-Readiness gewünscht (≥ 40 m², Ia-Vorrüstung)" }} val={d.gates.endo} set={(v) => up(["gates", "endo"], v)} gates={d.gates} />
-              <Field q={{ t: "choice", label: "§ 30-GewO-Status (bei Kurzlieger)", req: true, opts: ["Nicht relevant (kein Kurzlieger)", "Behördlich geklärt", "In Klärung", "Offen"] }} val={d.gates.p30} set={(v) => up(["gates", "p30"], v)} gates={d.gates} />
+              {(d.gates.portfolio.length === 0 || d.gates.portfolio.some((p) => ["Schulter", "Hüfte", "Knie"].includes(p))) && <Field q={{ t: "bool", label: "Endoprothetik-Readiness gewünscht (≥ 40 m², Ia-Vorrüstung)" }} val={d.gates.endo} set={(v) => up(["gates", "endo"], v)} gates={d.gates} />}
+              {d.betten.g1 !== false && <Field q={{ t: "choice", label: "§ 30-GewO-Status (bei Kurzlieger)", req: true, opts: ["Behördlich geklärt", "In Klärung", "Offen"] }} val={d.gates.p30} set={(v) => up(["gates", "p30"], v)} gates={d.gates} />}
               <Field q={{ t: "bool", label: "Krankenhaushygieniker benannt / eingebunden" }} val={d.gates.hygieniker} set={(v) => up(["gates", "hygieniker"], v)} gates={d.gates} />
               <Field q={{ t: "bool", label: "RLT-Fachplaner eingebunden" }} val={d.gates.rltPlaner} set={(v) => up(["gates", "rltPlaner"], v)} gates={d.gates} />
               <Field q={{ t: "bool", label: "DWG-Pläne maßstabsgetreu vorhanden (medifa-Pflicht)", req: true }} val={d.gates.dwg} set={(v) => up(["gates", "dwg"], v)} gates={d.gates} />
@@ -612,12 +618,21 @@ export default function OpChecklist() {
                 {["medifa/S+N", "bauseits", "offen"].map((o) => <button key={o} onClick={() => up(["schnitt", "zust", g], o)} className="px-3 py-1.5 rounded-lg text-[12px] font-semibold" style={{ border: "1px solid " + (d.schnitt.zust[g] === o ? (o === "offen" ? C.bad : C.ink) : C.line), background: d.schnitt.zust[g] === o ? (o === "offen" ? C.bad : C.ink) : "#fff", color: d.schnitt.zust[g] === o ? "#fff" : C.grey }}>{o}</button>)}
               </div>)}
             </SectionCard>
-            <SectionCard title="Bestand (Altbau-kritisch)">
-              <Field q={{ t: "bool", label: "Statik / Deckenlasten für DVE + OP-Leuchte geprüft", req: true }} val={d.schnitt.statik} set={(v) => up(["schnitt", "statik"], v)} gates={d.gates} />
-              <Field q={{ t: "bool", label: "Rohdeckenhöhen in allen Räumen gemessen (nicht nur dwg)" }} val={d.schnitt.rohhoehe} set={(v) => up(["schnitt", "rohhoehe"], v)} gates={d.gates} />
-              <Field q={{ t: "bool", label: "Transportweg für Wandelemente geprüft (Treppenhaus/Aufzug/Fenster)", req: true }} val={d.schnitt.transport} set={(v) => up(["schnitt", "transport"], v)} gates={d.gates} />
-              <Field q={{ t: "area", label: "Bemerkungen" }} val={d.schnitt.bem} set={(v) => up(["schnitt", "bem"], v)} gates={d.gates} />
-            </SectionCard>
+            {d.kopf.bauart === "Neubau" ? (
+              <SectionCard title="Bestand">
+                <div className="flex items-center gap-2 text-[13px]" style={{ color: C.grey }}>
+                  <Chip color={C.grey}>Neubau</Chip>
+                  <span>Bestandsprüfung (Statik, Rohdeckenhöhen, Transportweg) entfällt – wird im Neubau frei geplant.</span>
+                </div>
+              </SectionCard>
+            ) : (
+              <SectionCard title="Bestand (Altbau-kritisch)">
+                <Field q={{ t: "bool", label: "Statik / Deckenlasten für DVE + OP-Leuchte geprüft", req: true }} val={d.schnitt.statik} set={(v) => up(["schnitt", "statik"], v)} gates={d.gates} />
+                <Field q={{ t: "bool", label: "Rohdeckenhöhen in allen Räumen gemessen (nicht nur dwg)" }} val={d.schnitt.rohhoehe} set={(v) => up(["schnitt", "rohhoehe"], v)} gates={d.gates} />
+                <Field q={{ t: "bool", label: "Transportweg für Wandelemente geprüft (Treppenhaus/Aufzug/Fenster)", req: true }} val={d.schnitt.transport} set={(v) => up(["schnitt", "transport"], v)} gates={d.gates} />
+                <Field q={{ t: "area", label: "Bemerkungen" }} val={d.schnitt.bem} set={(v) => up(["schnitt", "bem"], v)} gates={d.gates} />
+              </SectionCard>
+            )}
           </>}
 
           {mod === "montage" && <>
