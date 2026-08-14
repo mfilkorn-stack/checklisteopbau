@@ -30,12 +30,20 @@ npm run preview  # Build lokal prüfen
 Jeder Push auf den Default-Branch baut das Projekt und veröffentlicht es über
 GitHub Actions (`.github/workflows/deploy.yml`) auf GitHub Pages.
 
-Sollte das Deployment nicht starten, im Repository einmalig **Settings → Pages →
-Build and deployment → Source: „GitHub Actions"** setzen.
+### Einmalige Aktivierung
+
+GitHub Pages muss vom Repository-Inhaber freigeschaltet werden – der
+`GITHUB_TOKEN` des Workflows darf das nicht selbst tun:
+
+1. **Settings → Pages → Build and deployment → Source: „GitHub Actions"**
+2. **Actions → „Deploy to GitHub Pages" → Re-run all jobs**
+
+Danach läuft jedes weitere Deployment automatisch.
 
 Da die Seite unter dem Unterpfad `/checklisteopbau/` ausgeliefert wird, setzt
-`vite.config.js` die passende `base` – nur für den Build, lokal bleibt es `/`.
+`vite.config.js` die `base` entsprechend – für Build, Dev-Server und Preview
+gleichermaßen, damit lokal dieselben Pfade gelten wie in der Veröffentlichung.
 
 ## Technik
 
-React 18 · Vite 5 · Tailwind CSS 3 · lucide-react
+React 18 · Vite 7 · Tailwind CSS 3 · lucide-react
