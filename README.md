@@ -27,11 +27,11 @@ npm run preview  # Build lokal prüfen
 
 ## Deployment
 
-Jeder Push auf `main` baut das Projekt und veröffentlicht es über GitHub Actions
-(`.github/workflows/deploy.yml`) auf GitHub Pages.
+Jeder Push auf den Default-Branch baut das Projekt und veröffentlicht es über
+GitHub Actions (`.github/workflows/deploy.yml`) auf GitHub Pages.
 
-Einmalige Einrichtung im Repository: **Settings → Pages → Build and deployment →
-Source: „GitHub Actions"**.
+Sollte das Deployment nicht starten, im Repository einmalig **Settings → Pages →
+Build and deployment → Source: „GitHub Actions"** setzen.
 
 Da die Seite unter dem Unterpfad `/checklisteopbau/` ausgeliefert wird, setzt
 `vite.config.js` die passende `base` – nur für den Build, lokal bleibt es `/`.

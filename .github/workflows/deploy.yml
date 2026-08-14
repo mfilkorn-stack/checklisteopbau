@@ -2,7 +2,10 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    # Das Repository war beim Anlegen leer, deshalb ist derzeit der
+    # claude/-Branch der Default-Branch. Beide Namen stehen hier, damit das
+    # Deployment auch nach einem Wechsel auf main weiterläuft.
+    branches: [main, claude/add-page-github-pages-w2fflz]
   workflow_dispatch:
 
 permissions:
@@ -34,6 +37,9 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          # Pages im Repository automatisch aktivieren, falls noch nicht geschehen
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
