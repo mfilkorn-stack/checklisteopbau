@@ -212,7 +212,7 @@ const emptyDoor = (art) => ({ id: Math.random().toString(36).slice(2, 8), art, a
 const emptyRoom = (typ, name) => ({ id: Math.random().toString(36).slice(2, 8), typ, name, linie: "classic", a: {}, tueren: [] });
 
 const initial = () => ({
-  kopf: { datum: new Date().toISOString().slice(0, 10), objekt: "", projekt: "", bauart: "", ort: "", n_op: "", raumnr: "", n_neben: "", nebennr: "", termin: "", arten: [], verantwortlich: "", budget: "", budgetRaeume: "", zeitraum: "", bem: "" },
+  kopf: { datum: new Date().toISOString().slice(0, 10), objekt: "", projekt: "", bauart: "", ort: "", n_op: "", n_neben: "", nebennr: "", termin: "", arten: [], verantwortlich: "", budget: "", budgetRaeume: "", zeitraum: "", bem: "" },
   betten: { g1: null, g2: null, g3: null, m: "", trigger: "" },
   gates: { portfolio: [], faelleProSaal: "6-8", c_bogen: null, endo: null, raumklassen: "", p30: "", hygieniker: null, rltPlaner: null, dwg: null, bem: "" },
   raeume: [],
@@ -226,7 +226,7 @@ const initial = () => ({
 
 const bielefeld = () => {
   const d = initial();
-  d.kopf = { ...d.kopf, datum: "2025-10-08", objekt: "ORTHO & CO", projekt: "OP Bau altes Fabrikgebäude", bauart: "Altbau/Renovierung", ort: "Bielefeld", n_op: "3", raumnr: "3x 1b fertig, 1x zum Ausbau 1a", n_neben: "4", termin: "Mitte/Ende 2026", arten: ["Operationsräume", "Waschräume", "Aufwachraum", "Steri", "Lagerraum", "Flure"], verantwortlich: "Dr. Colcuc + Besitzer Immobilie", budget: "Günstig wie möglich", bem: "Reines OP-Zentrum // 2 Behandlungsräume, 1 Büroraum, 1 Anästhesieraum, Aufenthalt. Räume 30 m² plus." };
+  d.kopf = { ...d.kopf, datum: "2025-10-08", objekt: "ORTHO & CO", projekt: "OP Bau altes Fabrikgebäude", bauart: "Altbau/Renovierung", ort: "Bielefeld", n_op: "3", n_neben: "4", termin: "Mitte/Ende 2026", arten: ["Operationsräume", "Waschräume", "Aufwachraum", "Steri", "Lagerraum", "Flure"], verantwortlich: "Dr. Colcuc + Besitzer Immobilie", budget: "Günstig wie möglich", bem: "Reines OP-Zentrum // 2 Behandlungsräume, 1 Büroraum, 1 Anästhesieraum, Aufenthalt. Räume 30 m² plus." };
   d.gates = { ...d.gates, portfolio: ["Schulter", "Knie", "Hüfte", "Fuß/Sprunggelenk", "Hand", "Wirbelsäule"], c_bogen: true, raumklassen: "3x Ib fertig, 1x Ausbau auf Ia vorbereiten", dwg: true };
   d.betten = { g1: null, g2: null, g3: null, m: "", trigger: "" };
   const op1 = emptyRoom("op", "OP 1");
@@ -473,7 +473,6 @@ export default function OpChecklist() {
               <Field q={{ t: "choice", label: "Bauart", req: true, opts: ["Altbau/Renovierung", "Neubau"] }} val={d.kopf.bauart} set={(v) => up(["kopf", "bauart"], v)} gates={d.gates} />
               <Field q={{ t: "text", label: "Ort/Stadt", req: true }} val={d.kopf.ort} set={(v) => up(["kopf", "ort"], v)} gates={d.gates} />
               <Field q={{ t: "num", label: "Anzahl anzubietender OPs (n)", req: true }} val={d.kopf.n_op} set={(v) => up(["kopf", "n_op"], v)} gates={d.gates} />
-              <Field q={{ t: "text", label: "Stück/Raumnummer(n)" }} val={d.kopf.raumnr} set={(v) => up(["kopf", "raumnr"], v)} gates={d.gates} />
               <Field q={{ t: "num", label: "Anzahl anzubietender Nebenräume" }} val={d.kopf.n_neben} set={(v) => up(["kopf", "n_neben"], v)} gates={d.gates} />
               <Field q={{ t: "text", label: "Geplantes Ausführungsdatum" }} val={d.kopf.termin} set={(v) => up(["kopf", "termin"], v)} gates={d.gates} />
               <Field q={{ t: "text", label: "Projektverantwortlicher / Entscheider", req: true }} val={d.kopf.verantwortlich} set={(v) => up(["kopf", "verantwortlich"], v)} gates={d.gates} />
