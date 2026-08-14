@@ -292,6 +292,140 @@ function SectionCard({ title, children }) {
   return <div className="rounded-2xl mb-4 overflow-hidden" style={{ border: "1px solid " + C.line, background: "#fff" }}><div className="px-4 py-2.5 text-[12px] font-bold uppercase tracking-widest" style={{ background: C.soft, color: C.ink }}>{title}</div><div className="p-4">{children}</div></div>;
 }
 
+/* ---------------- Druckansicht (vollständiger Bericht) ---------------- */
+
+function fmtVal(q, val) {
+  if (q.t === "bool") return val === true ? "Ja" : val === false ? "Nein" : "–";
+  if (q.t === "choice") return val || "–";
+  if (q.t === "multi") return val && val.length ? val.join(", ") : "–";
+  if (q.t === "qty") { const v = val || {}; if (!v.ja) return "Nein"; return v.n ? "Ja – " + v.n + " Stück" : "Ja"; }
+  if (q.t === "pb") { const v = val || {}; if (!v.ja) return "Nein"; return v.pb ? "Ja – " + v.pb : "Ja"; }
+  if (q.t === "num") return val || val === 0 ? val + (q.unit ? " " + q.unit : "") : "–";
+  return val || "–";
+}
+
+function PrintRow({ label, value }) {
+  return <div style={{ display: "flex", gap: 10, padding: "2.5px 0", borderBottom: "1px solid #e5e5e5" }}>
+    <div style={{ flex: "0 0 58%", color: "#555" }}>{label}</div>
+    <div style={{ flex: 1, fontWeight: 700, color: "#111", whiteSpace: "pre-wrap" }}>{value}</div>
+  </div>;
+}
+
+function PrintSection({ title, children }) {
+  return <div style={{ marginBottom: 14, breakInside: "avoid" }}>
+    <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: "2px solid #17414E", paddingBottom: 3, marginBottom: 4, color: "#17414E" }}>{title}</div>
+    {children}
+  </div>;
+}
+
+function PrintReport({ d, missing, score, kurzliegerErgebnis }) {
+  const bemRow = (label, val) => (val ? <PrintRow label={label} value={val} /> : null);
+  return <div className="print-report" style={{ padding: "16mm 14mm", color: "#111", fontSize: 10.5, fontFamily: "Archivo, system-ui, sans-serif" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "3px solid #17414E", paddingBottom: 8, marginBottom: 14 }}>
+      <div>
+        <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.12em", color: "#666" }}>OP-Bau Erfassung · medifa V3.1 + Playbook 2.1</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "#17414E" }}>{d.kopf.objekt || "Neues Projekt"}{d.kopf.ort ? " · " + d.kopf.ort : ""}</div>
+      </div>
+      <div style={{ textAlign: "right" }}>
+        <div style={{ fontSize: 9, color: "#666" }}>Angebotsreife · {new Date().toLocaleDateString("de-DE")}</div>
+        <div style={{ fontSize: 16, fontWeight: 800, color: "#17414E" }}>{score} %</div>
+      </div>
+    </div>
+
+    <PrintSection title="1 · Projektkopf">
+      <PrintRow label="Name des Objektes" value={d.kopf.objekt || "–"} />
+      <PrintRow label="Projektbezeichnung" value={d.kopf.projekt || "–"} />
+      <PrintRow label="Bauart" value={d.kopf.bauart || "–"} />
+      <PrintRow label="Ort/Stadt" value={d.kopf.ort || "–"} />
+      <PrintRow label="Anzahl anzubietender OPs (n)" value={d.kopf.n_op || "–"} />
+      <PrintRow label="Anzahl anzubietender Nebenräume" value={d.kopf.n_neben || "–"} />
+      <PrintRow label="Geplantes Ausführungsdatum" value={d.kopf.termin || "–"} />
+      <PrintRow label="Projektverantwortlicher / Entscheider" value={d.kopf.verantwortlich || "–"} />
+      <PrintRow label="Projektbudget gesamt" value={d.kopf.budget || "–"} />
+      <PrintRow label="Projektbudget Räume" value={d.kopf.budgetRaeume || "–"} />
+      <PrintRow label="Geplanter Ausführungszeitraum" value={d.kopf.zeitraum || "–"} />
+      <PrintRow label="Art der Räume" value={d.kopf.arten && d.kopf.arten.length ? d.kopf.arten.join(", ") : "–"} />
+      {bemRow("Bemerkungen", d.kopf.bem)}
+    </PrintSection>
+
+    <PrintSection title="Betten-Entscheidung">
+      <PrintRow label="Gate 1 · Übernachtungseingriffe im Portfolio?" value={d.betten.g1 === true ? "Ja" : d.betten.g1 === false ? "Nein" : "–"} />
+      {d.betten.g1 === true && <PrintRow label="Gate 2 · Nachtfixkosten gedeckt?" value={d.betten.g2 === true ? "Ja" : d.betten.g2 === false ? "Nein" : d.betten.g2 === "unsicher" ? "Unsicher" : "–"} />}
+      {d.betten.g1 === true && <PrintRow label="Gate 3 · § 30 GewO / Brandschutz erreichbar?" value={d.betten.g3 === true ? "Ja" : d.betten.g3 === false ? "Nein" : d.betten.g3 === "offen" ? "Offen" : "–"} />}
+      <PrintRow label="Ergebnis" value={kurzliegerErgebnis === "ja" ? "Kurzlieger = JA" : kurzliegerErgebnis === "vorruesten" ? "Vorrüsten (Realoption)" : kurzliegerErgebnis === "nein" ? "Kurzlieger = NEIN (Same-Day)" : "noch offen"} />
+      {(kurzliegerErgebnis === "ja" || kurzliegerErgebnis === "vorruesten") && <>
+        <PrintRow label="Bettenzahl m" value={d.betten.m || "–"} />
+        <PrintRow label="Trigger für Nachtbetrieb" value={d.betten.trigger || "–"} />
+      </>}
+    </PrintSection>
+
+    <PrintSection title="Klinische Gates">
+      <PrintRow label="Eingriffsspektrum / Portfolio" value={d.gates.portfolio.length ? d.gates.portfolio.join(", ") : "–"} />
+      <PrintRow label="Zielfallzahl je Saal und Tag" value={d.gates.faelleProSaal || "–"} />
+      <PrintRow label="C-Bogen im Einsatz" value={d.gates.c_bogen === true ? "Ja" : d.gates.c_bogen === false ? "Nein" : "–"} />
+      <PrintRow label="Raumklasse je Saal" value={d.gates.raumklassen || "–"} />
+      {(d.gates.portfolio.length === 0 || d.gates.portfolio.some((p) => ["Schulter", "Hüfte", "Knie"].includes(p))) && <PrintRow label="Endoprothetik-Readiness" value={d.gates.endo === true ? "Ja" : d.gates.endo === false ? "Nein" : "–"} />}
+      {d.betten.g1 !== false && <PrintRow label="§ 30-GewO-Status" value={d.gates.p30 || "–"} />}
+      <PrintRow label="Krankenhaushygieniker eingebunden" value={d.gates.hygieniker === true ? "Ja" : d.gates.hygieniker === false ? "Nein" : "–"} />
+      <PrintRow label="RLT-Fachplaner eingebunden" value={d.gates.rltPlaner === true ? "Ja" : d.gates.rltPlaner === false ? "Nein" : "–"} />
+      <PrintRow label="DWG-Pläne vorhanden" value={d.gates.dwg === true ? "Ja" : d.gates.dwg === false ? "Nein" : "–"} />
+      {bemRow("Bemerkungen", d.gates.bem)}
+    </PrintSection>
+
+    {d.raeume.map((r) => <PrintSection key={r.id} title={"Raum · " + r.name + " (" + ((ROOM_TYPES.find((t) => t.id === r.typ) || {}).label || r.typ) + ", " + r.linie + ")"}>
+      {ROOM_SECTIONS.filter((s) => s.types.includes(r.typ)).map((s) => <div key={s.id} style={{ marginBottom: 4 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "#17414E", marginTop: 6 }}>{s.title}</div>
+        {s.qs.filter((q) => !q.showIf || q.showIf(r.a)).map((q) => <PrintRow key={q.id} label={q.label} value={fmtVal(q, r.a[q.id])} />)}
+      </div>)}
+      {r.tueren.map((t, i) => {
+        const pfx = t.art === "schiebe" ? "schiebe" : "dreh";
+        return <div key={t.id} style={{ marginBottom: 4 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "#17414E", marginTop: 6 }}>{(t.art === "schiebe" ? "Schiebetür " : "Drehflügeltür ") + (i + 1)}</div>
+          {doorQs(pfx).filter((q) => !q.showIf || q.showIf(t.a)).map((q) => <PrintRow key={q.id} label={q.label} value={fmtVal(q, t.a[q.id])} />)}
+        </div>;
+      })}
+    </PrintSection>)}
+
+    <PrintSection title="OP-Tische">
+      <PrintRow label="Anzahl OP-Tische" value={d.tische.anzahl || "–"} />
+      <PrintRow label="Antriebstechnik" value={d.tische.antrieb || "–"} />
+      <PrintRow label="Dynamische Patientenbelastung" value={d.tische.last || "–"} />
+      <PrintRow label="Positionierungskissen / Lagerungsmaterial" value={d.tische.lagerung === true ? "Ja" : d.tische.lagerung === false ? "Nein" : "–"} />
+      <PrintRow label="OP-Anforderung (Fachrichtungen)" value={(d.tische.fach.length ? d.tische.fach : d.gates.portfolio).join(", ") || "–"} />
+      {bemRow("Bemerkungen", d.tische.bem)}
+    </PrintSection>
+
+    <PrintSection title="Arthroskopie (S+N)">
+      {TURM.filter((t) => d.arthro.turm[t]).map((t) => <PrintRow key={t} label={t} value={d.arthro.turm[t] + " Stück"} />)}
+      {SIEBE.filter((t) => d.arthro.siebe[t]).map((t) => <PrintRow key={t} label={t} value={d.arthro.siebe[t] + " Stück"} />)}
+      {TOOLS.filter((t) => d.arthro.tools[t]).map((t) => <PrintRow key={t} label={t} value={d.arthro.tools[t] + " Stück"} />)}
+      {bemRow("Bemerkungen", d.arthro.bem)}
+    </PrintSection>
+
+    <PrintSection title="Schnittstellen & Bestand">
+      {GEWERKE.map((g) => <PrintRow key={g} label={g} value={d.schnitt.zust[g] || "offen"} />)}
+      {d.kopf.bauart === "Neubau" ? <PrintRow label="Bestand" value="Neubau – entfällt" /> : <>
+        <PrintRow label="Statik / Deckenlasten geprüft" value={d.schnitt.statik === true ? "Ja" : d.schnitt.statik === false ? "Nein" : "–"} />
+        <PrintRow label="Rohdeckenhöhen gemessen" value={d.schnitt.rohhoehe === true ? "Ja" : d.schnitt.rohhoehe === false ? "Nein" : "–"} />
+        <PrintRow label="Transportweg geprüft" value={d.schnitt.transport === true ? "Ja" : d.schnitt.transport === false ? "Nein" : "–"} />
+      </>}
+      {bemRow("Bemerkungen", d.schnitt.bem)}
+    </PrintSection>
+
+    <PrintSection title="Montage & Abschluss">
+      <PrintRow label="Montageteam durch medifa" value={d.montage.team === true ? "Ja" : d.montage.team === false ? "Nein" : "–"} />
+      {d.montage.team === true && <PrintRow label="Anzahl Personen" value={d.montage.personen || "–"} />}
+      <PrintRow label="Supervisor" value={d.montage.supervisor === true ? "Ja" : d.montage.supervisor === false ? "Nein" : "–"} />
+      {bemRow("Offene Punkte / weitere Wünsche", d.montage.offen)}
+      <PrintRow label="Vor Versand an das Werk geprüft" value={d.montage.checks && d.montage.checks.length ? d.montage.checks.join(", ") : "–"} />
+    </PrintSection>
+
+    <PrintSection title={"Offene Pflichtpunkte (" + missing.length + ")"}>
+      {missing.length === 0 ? <div style={{ fontWeight: 700, color: "#3D7A34" }}>Alle Pflichtpunkte erfasst – angebotsreif.</div> : missing.map((m, i) => <PrintRow key={i} label={String(i + 1)} value={m.label} />)}
+    </PrintSection>
+  </div>;
+}
+
 /* ---------------- Pflichtfeld-Logik ---------------- */
 
 function computeMissing(d) {
@@ -422,8 +556,9 @@ export default function OpChecklist() {
 
   return (
     <div style={{ ...S, background: C.paper, minHeight: "100vh", color: C.ink }}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&display=swap'); *{box-sizing:border-box} button{cursor:pointer;font-family:inherit} input,textarea{font-family:inherit} button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid " + C.accent + ";outline-offset:1px}"}</style>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&display=swap'); *{box-sizing:border-box} button{cursor:pointer;font-family:inherit} input,textarea{font-family:inherit} button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid " + C.accent + ";outline-offset:1px} .print-report{display:none} @media print{.app-screen{display:none !important} .print-report{display:block !important} @page{margin:12mm}}"}</style>
 
+      <div className="app-screen">
       {/* Kopfzeile */}
       <div className="sticky top-0 z-20 px-4 py-3" style={{ background: C.ink, color: "#fff" }}>
         <div className="max-w-6xl mx-auto flex flex-wrap items-center gap-3">
@@ -651,7 +786,7 @@ export default function OpChecklist() {
               <div className="flex gap-2 mb-4 flex-wrap">
                 <button onClick={exportJson} className="px-3 py-2 rounded-lg text-[12.5px] font-semibold flex items-center gap-1.5" style={{ background: C.ink, color: "#fff" }}><Download size={14} /> JSON exportieren</button>
                 <button onClick={copyOpen} className="px-3 py-2 rounded-lg text-[12.5px] font-semibold flex items-center gap-1.5" style={btnGhost}><Copy size={14} /> Offene Punkte kopieren (Follow-up-Mail)</button>
-                <button onClick={() => window.print()} className="px-3 py-2 rounded-lg text-[12.5px] font-semibold flex items-center gap-1.5" style={btnGhost}><FileText size={14} /> Drucken / PDF</button>
+                <button onClick={() => window.print()} className="px-3 py-2 rounded-lg text-[12.5px] font-semibold flex items-center gap-1.5" style={btnGhost}><FileText size={14} /> Vollständigen Bericht drucken / PDF</button>
               </div>
               {missing.length === 0 && <div className="flex items-center gap-2 text-[14px] font-semibold" style={{ color: C.ok }}><CheckCircle2 size={18} /> Alle Pflichtpunkte erfasst – angebotsreif.</div>}
               {missing.map((m, i) => <button key={i} onClick={() => setMod(m.mod)} className="w-full text-left flex items-start gap-2 py-1.5 text-[13px] rounded-lg px-2 hover:bg-black/5">
@@ -665,6 +800,9 @@ export default function OpChecklist() {
           </>}
         </div>
       </div>
+      </div>
+
+      <PrintReport d={d} missing={missing} score={score} kurzliegerErgebnis={kurzliegerErgebnis} />
     </div>
   );
 }
