@@ -1,5 +1,7 @@
 # OP-Bau Erfassung
 
+> **Abgelöst.** Die Checkliste ist als Ansicht „Erfassung“ in den [OP-Planer](https://github.com/mfilkorn-stack/OP-Planer) integriert (`src/erfassung/`). Dort arbeitet sie auf dem gezeichneten Plan: Räume, Türen, Saalzahl und Rohbauhöhe kommen aus dem Projekt, die Antworten werden mit der Plan-JSON gespeichert und erscheinen im Prüfbericht. Bestehende Exporte dieser App (`*_erfassung.json`) lassen sich dort über „Importieren“ übernehmen. Dieses Repository wird nicht weiterentwickelt und kann archiviert werden; die GitHub-Pages-Seite kann abgeschaltet werden.
+
 Digitale Erfassungs-Checkliste für OP-Bauprojekte – Stufe 1 (MVP).
 
 Datenbasis: **medifa Fragenkatalog V3.1 DE** + **OP Playbook 2.1** (Gate-Logik).
